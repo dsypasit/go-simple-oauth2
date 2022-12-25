@@ -47,6 +47,7 @@ func main() {
 	mux.Handle("/login", &templateHandler{filename: "login.html"})
 	mux.HandleFunc("/auth/", loginHandler)
 	mux.HandleFunc("/secret", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/secret", &authMiddleware{next: func(w http.ResponseWriter, r *http.Request) {
 		var data map[string]interface{}
 		if authCookie, err := r.Cookie("auth"); err == nil {
 			data = objx.MustFromBase64(authCookie.Value)
@@ -54,6 +55,7 @@ func main() {
 		log.Printf("%#v\n", data)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Hi %s", data["email"])
+	}})
 	})
 
 	server := http.Server{

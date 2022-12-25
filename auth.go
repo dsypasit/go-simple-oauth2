@@ -56,3 +56,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
 }
+
+type authMiddleware struct {
+	next http.HandlerFunc
+}
+
+func (m authMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	c, err := r.Cookie("auth")
+	if err == http.ErrNoCookie || c.Value == "" {
+		w.Header().Set("Location", "/login")
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	m.next.ServeHTTP(w, r)
+}
